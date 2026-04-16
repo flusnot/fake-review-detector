@@ -3,1154 +3,770 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fake Review Detector — AI-Powered Review Authenticity Analysis</title>
-  <meta name="description" content="Instantly detect fake product reviews with AI. Paste any review and get a real-time authenticity score powered by Groq AI." />
+  <title>Fake Review Detector — Is That Review Real?</title>
+  <meta name="description" content="Paste any product review. Our AI tells you if it's genuine, suspicious, or fake — with a score and reasons." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@700;800&display=swap" rel="stylesheet" />
   <style>
-    *, *::before, *::after {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0a0a0a;
-      --bg-card: #111111;
-      --bg-card-hover: #161616;
-      --border: rgba(255,255,255,0.07);
-      --border-glow: rgba(124,58,237,0.4);
-      --accent: #7c3aed;
-      --accent-light: #9d62f5;
-      --accent-dim: rgba(124,58,237,0.15);
-      --text: #f0f0f0;
-      --text-muted: #888;
-      --text-subtle: #555;
-      --green: #22c55e;
-      --yellow: #eab308;
-      --red: #ef4444;
-      --green-dim: rgba(34,197,94,0.12);
-      --yellow-dim: rgba(234,179,8,0.12);
-      --red-dim: rgba(239,68,68,0.12);
-      --radius: 12px;
-      --radius-lg: 20px;
+      --bg:         #0e0e0c;
+      --surface:    #161614;
+      --surface-2:  #1e1e1b;
+      --border:     #2a2a27;
+      --border-2:   #333330;
+      --text:       #e8e8e2;
+      --text-2:     #8a8a82;
+      --text-3:     #555550;
+      --orange:     #f97316;
+      --orange-dim: rgba(249,115,22,0.1);
+      --green:      #4ade80;
+      --green-dim:  rgba(74,222,128,0.08);
+      --yellow:     #facc15;
+      --yellow-dim: rgba(250,204,21,0.08);
+      --red:        #f87171;
+      --red-dim:    rgba(248,113,113,0.08);
+      --radius:     10px;
     }
 
-    html {
-      scroll-behavior: smooth;
-    }
+    html { scroll-behavior: smooth; }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background-color: var(--bg);
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
       color: var(--text);
       min-height: 100vh;
       line-height: 1.6;
-      overflow-x: hidden;
     }
 
-    /* Dot grid background */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px);
-      background-size: 28px 28px;
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    /* Ambient glow blobs */
-    body::after {
-      content: '';
-      position: fixed;
-      top: -20%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 900px;
-      height: 600px;
-      background: radial-gradient(ellipse at center, rgba(124,58,237,0.12) 0%, transparent 70%);
-      pointer-events: none;
-      z-index: 0;
-    }
-
-    .wrapper {
-      position: relative;
-      z-index: 1;
-      max-width: 760px;
+    /* ── LAYOUT ── */
+    .page {
+      max-width: 680px;
       margin: 0 auto;
-      padding: 0 20px;
+      padding: 0 24px 80px;
     }
 
-    /* ─── NAV ─── */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      padding: 16px 0;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border);
-      background: rgba(10,10,10,0.7);
-    }
-
-    nav .nav-inner {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 0 20px;
+    /* ── NAV ── */
+    header {
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 28px 0 0;
+      margin-bottom: 72px;
     }
 
-    .nav-brand {
+    .logo {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
       font-size: 15px;
+      font-weight: 700;
       color: var(--text);
       text-decoration: none;
+      letter-spacing: -0.02em;
     }
 
-    .nav-brand .shield {
-      font-size: 20px;
-      filter: drop-shadow(0 0 8px rgba(124,58,237,0.8));
+    .logo-mark {
+      width: 30px;
+      height: 30px;
+      background: var(--orange);
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      font-size: 15px;
+      flex-shrink: 0;
     }
 
-    .nav-pill {
+    .header-link {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      text-decoration: none;
+      border: 1px solid var(--border-2);
+      padding: 7px 14px;
+      border-radius: 8px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .header-link:hover {
+      color: var(--text);
+      border-color: var(--border-2);
+    }
+
+    /* ── HERO ── */
+    .hero {
+      margin-bottom: 48px;
+    }
+
+    .hero-tag {
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      background: var(--accent-dim);
-      border: 1px solid var(--border-glow);
-      color: var(--accent-light);
+      gap: 7px;
+      background: var(--orange-dim);
+      border: 1px solid rgba(249,115,22,0.2);
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 100px;
+      margin-bottom: 22px;
+      letter-spacing: 0.02em;
+    }
+
+    .hero-tag-dot {
+      width: 5px;
+      height: 5px;
+      background: var(--orange);
+      border-radius: 50%;
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(36px, 7vw, 58px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: var(--text);
+      margin-bottom: 18px;
+    }
+
+    h1 em {
+      font-style: normal;
+      color: var(--orange);
+    }
+
+    .hero-sub {
+      font-size: 16px;
+      color: var(--text-2);
+      line-height: 1.65;
+      max-width: 480px;
+    }
+
+    /* ── FORM ── */
+    .form-section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      margin-bottom: 16px;
+    }
+
+    .form-top {
+      padding: 20px 20px 0;
+    }
+
+    .field-label {
       font-size: 11px;
       font-weight: 600;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      padding: 5px 12px;
-      border-radius: 100px;
-    }
-
-    .nav-pill .dot {
-      width: 6px;
-      height: 6px;
-      background: var(--accent-light);
-      border-radius: 50%;
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.4; transform: scale(0.8); }
-    }
-
-    /* ─── HERO ─── */
-    .hero {
-      text-align: center;
-      padding: 80px 0 64px;
-    }
-
-    .hero-icon {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 72px;
-      height: 72px;
-      background: var(--accent-dim);
-      border: 1px solid var(--border-glow);
-      border-radius: 20px;
-      font-size: 34px;
-      margin-bottom: 28px;
-      box-shadow: 0 0 40px rgba(124,58,237,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
-      animation: float 4s ease-in-out infinite;
-    }
-
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-6px); }
-    }
-
-    .hero h1 {
-      font-size: clamp(32px, 6vw, 54px);
-      font-weight: 900;
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: 18px;
-      background: linear-gradient(135deg, #ffffff 0%, rgba(255,255,255,0.7) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero h1 span {
-      background: linear-gradient(135deg, var(--accent-light) 0%, #c084fc 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .hero p {
-      font-size: clamp(15px, 2.5vw, 18px);
-      color: var(--text-muted);
-      max-width: 520px;
-      margin: 0 auto;
-      font-weight: 400;
-      line-height: 1.7;
-    }
-
-    .hero-badges {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 28px;
-      flex-wrap: wrap;
-    }
-
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      color: var(--text-muted);
-      font-size: 12px;
-      font-weight: 500;
-      padding: 5px 12px;
-      border-radius: 100px;
-    }
-
-    /* ─── DEMO FORM ─── */
-    .demo-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 32px;
-      margin-bottom: 24px;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 32px 64px rgba(0,0,0,0.4);
-      transition: border-color 0.3s ease;
-    }
-
-    .demo-card:focus-within {
-      border-color: rgba(124,58,237,0.3);
-    }
-
-    .form-label {
-      display: block;
-      font-size: 12px;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--text-subtle);
+      color: var(--text-3);
       margin-bottom: 10px;
-    }
-
-    .form-label span {
-      color: var(--accent-light);
+      display: block;
     }
 
     textarea {
       width: 100%;
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      background: transparent;
+      border: none;
       color: var(--text);
       font-family: 'Inter', sans-serif;
       font-size: 14px;
       line-height: 1.7;
-      padding: 16px;
-      resize: vertical;
-      min-height: 160px;
+      resize: none;
       outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      min-height: 148px;
+      padding: 0;
     }
 
-    textarea:focus {
-      border-color: rgba(124,58,237,0.5);
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    textarea::placeholder { color: var(--text-3); }
+
+    .form-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0 0;
     }
 
-    textarea::placeholder {
-      color: var(--text-subtle);
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 12px;
-      margin-top: 16px;
-      align-items: end;
-    }
-
-    @media (max-width: 520px) {
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    .input-group {
+    .form-bottom {
       display: flex;
-      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
     }
 
     input[type="text"] {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
+      flex: 1;
+      background: transparent;
+      border: none;
       color: var(--text);
       font-family: 'Inter', sans-serif;
-      font-size: 14px;
-      padding: 12px 16px;
+      font-size: 13px;
       outline: none;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease;
-      width: 100%;
+      padding: 4px 0;
     }
 
-    input[type="text"]:focus {
-      border-color: rgba(124,58,237,0.5);
-      box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
-    }
+    input[type="text"]::placeholder { color: var(--text-3); }
 
-    input[type="text"]::placeholder {
-      color: var(--text-subtle);
+    .form-bottom-divider {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      flex-shrink: 0;
     }
 
     .btn-analyze {
       display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 8px;
-      background: linear-gradient(135deg, var(--accent) 0%, #6d28d9 100%);
+      background: var(--orange);
       color: #fff;
       font-family: 'Inter', sans-serif;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      padding: 12px 28px;
+      padding: 9px 18px;
       border: none;
-      border-radius: var(--radius);
+      border-radius: 8px;
       cursor: pointer;
       white-space: nowrap;
-      transition: all 0.2s ease;
-      box-shadow: 0 0 20px rgba(124,58,237,0.3), 0 4px 12px rgba(0,0,0,0.3);
-      position: relative;
-      overflow: hidden;
-      min-width: 160px;
-    }
-
-    .btn-analyze::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
-      opacity: 0;
-      transition: opacity 0.2s ease;
-    }
-
-    .btn-analyze:hover:not(:disabled)::before {
-      opacity: 1;
+      flex-shrink: 0;
+      transition: opacity 0.15s, transform 0.15s;
     }
 
     .btn-analyze:hover:not(:disabled) {
+      opacity: 0.9;
       transform: translateY(-1px);
-      box-shadow: 0 0 30px rgba(124,58,237,0.45), 0 8px 20px rgba(0,0,0,0.3);
-    }
-
-    .btn-analyze:active:not(:disabled) {
-      transform: translateY(0);
     }
 
     .btn-analyze:disabled {
-      opacity: 0.7;
+      opacity: 0.6;
       cursor: not-allowed;
+      transform: none;
     }
 
-    /* Spinner */
     .spinner {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255,255,255,0.3);
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.35);
       border-top-color: #fff;
       border-radius: 50%;
-      animation: spin 0.7s linear infinite;
+      animation: spin 0.65s linear infinite;
       display: none;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    .btn-analyze.loading .spinner {
-      display: block;
-    }
+    .btn-analyze.loading .spinner { display: block; }
+    .btn-analyze.loading .btn-label { display: none; }
 
-    .btn-analyze.loading .btn-text {
-      display: none;
-    }
-
-    /* Cold start notice */
-    .cold-start-notice {
+    /* ── STATUS MESSAGES ── */
+    .status-bar {
       display: none;
       align-items: center;
       gap: 10px;
-      background: rgba(234,179,8,0.08);
-      border: 1px solid rgba(234,179,8,0.2);
-      border-radius: var(--radius);
       padding: 12px 16px;
-      margin-top: 16px;
-      font-size: 13px;
-      color: #fbbf24;
-    }
-
-    .cold-start-notice.visible {
-      display: flex;
-      animation: fade-in 0.4s ease;
-    }
-
-    .cold-start-notice .hourglass {
-      font-size: 16px;
-      animation: rock 1.5s ease-in-out infinite;
-    }
-
-    @keyframes rock {
-      0%, 100% { transform: rotate(0deg); }
-      25% { transform: rotate(-15deg); }
-      75% { transform: rotate(15deg); }
-    }
-
-    /* Error message */
-    .error-msg {
-      display: none;
-      align-items: flex-start;
-      gap: 10px;
-      background: rgba(239,68,68,0.08);
-      border: 1px solid rgba(239,68,68,0.2);
       border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-top: 16px;
-      font-size: 14px;
-      color: #fca5a5;
-    }
-
-    .error-msg.visible {
-      display: flex;
-      animation: fade-in 0.3s ease;
-    }
-
-    /* ─── RESULTS ─── */
-    .results-section {
-      display: none;
-      animation: slide-up 0.5s cubic-bezier(0.16,1,0.3,1) forwards;
-    }
-
-    .results-section.visible {
-      display: block;
-    }
-
-    @keyframes slide-up {
-      from { opacity: 0; transform: translateY(24px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fade-in {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    .results-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 36px 32px;
-      margin-bottom: 24px;
-      box-shadow: 0 0 0 1px rgba(0,0,0,0.5), 0 32px 64px rgba(0,0,0,0.4);
-    }
-
-    .results-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 32px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }
-
-    .results-title {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--text-subtle);
-    }
-
-    /* Verdict badge */
-    .verdict-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 8px 16px;
-      border-radius: 100px;
-      border: 1px solid;
-      letter-spacing: 0.02em;
-    }
-
-    .verdict-badge.genuine {
-      background: var(--green-dim);
-      border-color: rgba(34,197,94,0.3);
-      color: var(--green);
-    }
-
-    .verdict-badge.suspicious {
-      background: var(--yellow-dim);
-      border-color: rgba(234,179,8,0.3);
-      color: var(--yellow);
-    }
-
-    .verdict-badge.likely_fake {
-      background: var(--red-dim);
-      border-color: rgba(239,68,68,0.3);
-      color: var(--red);
-    }
-
-    /* Gauge */
-    .gauge-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      margin-bottom: 36px;
-    }
-
-    .gauge-wrap {
-      position: relative;
-      width: 200px;
-      height: 120px;
+      font-size: 13px;
+      font-weight: 500;
       margin-bottom: 12px;
     }
 
-    .gauge-svg {
-      width: 200px;
-      height: 120px;
-      overflow: visible;
+    .status-bar.warning {
+      background: rgba(250,204,21,0.07);
+      border: 1px solid rgba(250,204,21,0.18);
+      color: var(--yellow);
     }
 
-    .gauge-track {
-      fill: none;
-      stroke: rgba(255,255,255,0.06);
-      stroke-width: 14;
-      stroke-linecap: round;
+    .status-bar.error {
+      background: var(--red-dim);
+      border: 1px solid rgba(248,113,113,0.2);
+      color: var(--red);
     }
 
-    .gauge-fill {
-      fill: none;
-      stroke-width: 14;
-      stroke-linecap: round;
-      transition: stroke-dashoffset 1.2s cubic-bezier(0.16,1,0.3,1), stroke 0.6s ease;
+    .status-bar.visible { display: flex; }
+
+    /* ── RESULTS ── */
+    .results {
+      display: none;
+      animation: rise 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
-    .gauge-center-text {
-      position: absolute;
-      bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
-      text-align: center;
+    .results.visible { display: block; }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
     }
 
-    .gauge-score {
-      font-size: 42px;
-      font-weight: 900;
-      letter-spacing: -0.04em;
-      line-height: 1;
-      display: block;
+    /* Score row */
+    .score-row {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px 28px 24px;
+      margin-bottom: 12px;
     }
 
-    .gauge-label {
+    .score-left {}
+
+    .score-label {
       font-size: 11px;
       font-weight: 600;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: var(--text-subtle);
-      display: block;
-      margin-top: 2px;
+      color: var(--text-3);
+      margin-bottom: 6px;
     }
 
-    /* Score scale */
-    .gauge-scale {
+    .score-number {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 72px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+      transition: color 0.4s ease;
+    }
+
+    .score-sub {
+      font-size: 13px;
+      color: var(--text-2);
+      margin-top: 8px;
+    }
+
+    /* Progress bar */
+    .score-bar-wrap {
+      flex: 1;
+      max-width: 200px;
+    }
+
+    .score-bar-track {
+      height: 6px;
+      background: var(--surface-2);
+      border-radius: 100px;
+      overflow: hidden;
+      margin-bottom: 6px;
+    }
+
+    .score-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      width: 0%;
+      transition: width 1s cubic-bezier(0.16,1,0.3,1), background-color 0.4s ease;
+    }
+
+    .score-bar-labels {
       display: flex;
       justify-content: space-between;
-      width: 200px;
       font-size: 10px;
       font-weight: 600;
-      color: var(--text-subtle);
       letter-spacing: 0.04em;
+      color: var(--text-3);
     }
 
-    /* Reasons */
-    .reasons-section {
-      border-top: 1px solid var(--border);
-      padding-top: 24px;
+    /* Verdict + reasons */
+    .details-row {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
     }
 
-    .reasons-title {
-      font-size: 12px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+    @media (max-width: 520px) {
+      .details-row { grid-template-columns: 1fr; }
+      .score-row { flex-direction: column; align-items: flex-start; }
+      .score-bar-wrap { max-width: 100%; width: 100%; }
+    }
+
+    .verdict-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      min-width: 140px;
+    }
+
+    .verdict-icon {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .verdict-label-small {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
       text-transform: uppercase;
-      color: var(--text-subtle);
+      color: var(--text-3);
+    }
+
+    .verdict-text {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+    }
+
+    .verdict-text.genuine    { color: var(--green); }
+    .verdict-text.suspicious { color: var(--yellow); }
+    .verdict-text.likely_fake{ color: var(--red); }
+
+    .reasons-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+    }
+
+    .reasons-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-3);
       margin-bottom: 14px;
     }
 
     .reasons-list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
       list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
     }
 
-    .reason-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(255,255,255,0.04);
-      border: 1px solid var(--border);
-      border-radius: 100px;
-      padding: 8px 16px;
+    .reason-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
       font-size: 13px;
-      font-weight: 500;
-      color: var(--text-muted);
-      animation: pop-in 0.4s cubic-bezier(0.34,1.56,0.64,1) backwards;
+      color: var(--text-2);
+      line-height: 1.5;
+      animation: fade-in 0.3s ease backwards;
     }
 
-    .reason-pill::before {
-      content: '';
-      width: 6px;
-      height: 6px;
+    .reason-dot {
+      width: 5px;
+      height: 5px;
       border-radius: 50%;
-      background: var(--accent-light);
+      background: var(--orange);
       flex-shrink: 0;
+      margin-top: 7px;
     }
 
-    @keyframes pop-in {
-      from { opacity: 0; transform: scale(0.8); }
-      to { opacity: 1; transform: scale(1); }
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateX(-6px); }
+      to   { opacity: 1; transform: translateX(0); }
     }
 
-    /* ─── CTA ─── */
-    .cta-section {
-      margin: 64px 0 48px;
+    /* ── CTA ── */
+    .cta {
+      margin-top: 64px;
+      border-top: 1px solid var(--border);
+      padding-top: 48px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 32px;
+      flex-wrap: wrap;
     }
 
-    .cta-card {
-      background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(109,40,217,0.06) 100%);
-      border: 1px solid var(--border-glow);
-      border-radius: var(--radius-lg);
-      padding: 48px 40px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 0 60px rgba(124,58,237,0.1);
-    }
-
-    .cta-card::before {
-      content: '';
-      position: absolute;
-      top: -50%;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 400px;
-      height: 300px;
-      background: radial-gradient(ellipse, rgba(124,58,237,0.15) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .cta-eyebrow {
-      font-size: 11px;
+    .cta-text h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
       font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent-light);
-      margin-bottom: 14px;
+      letter-spacing: -0.03em;
+      margin-bottom: 8px;
     }
 
-    .cta-card h2 {
-      font-size: clamp(22px, 4vw, 30px);
-      font-weight: 800;
-      letter-spacing: -0.02em;
-      margin-bottom: 12px;
-      color: var(--text);
-    }
-
-    .cta-card p {
-      font-size: 15px;
-      color: var(--text-muted);
-      max-width: 440px;
-      margin: 0 auto 28px;
-      line-height: 1.7;
+    .cta-text p {
+      font-size: 14px;
+      color: var(--text-2);
+      line-height: 1.6;
+      max-width: 320px;
     }
 
     .btn-cta {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      background: #fff;
-      color: #0a0a0a;
+      background: var(--orange);
+      color: #fff;
       font-family: 'Inter', sans-serif;
       font-size: 14px;
-      font-weight: 700;
-      padding: 14px 28px;
-      border-radius: var(--radius);
+      font-weight: 600;
+      padding: 12px 22px;
+      border-radius: 10px;
       text-decoration: none;
-      transition: all 0.2s ease;
-      box-shadow: 0 0 30px rgba(255,255,255,0.1), 0 4px 16px rgba(0,0,0,0.4);
+      white-space: nowrap;
+      flex-shrink: 0;
+      align-self: flex-start;
+      transition: opacity 0.15s, transform 0.15s;
     }
 
     .btn-cta:hover {
-      background: #f0f0f0;
-      transform: translateY(-2px);
-      box-shadow: 0 0 40px rgba(255,255,255,0.15), 0 8px 24px rgba(0,0,0,0.4);
+      opacity: 0.9;
+      transform: translateY(-1px);
     }
 
-    .btn-cta .arrow {
-      transition: transform 0.2s ease;
-    }
-
-    .btn-cta:hover .arrow {
-      transform: translateX(3px);
-    }
-
-    /* Stats row */
-    .cta-stats {
-      display: flex;
-      justify-content: center;
-      gap: 40px;
-      margin-top: 36px;
-      padding-top: 28px;
-      border-top: 1px solid rgba(255,255,255,0.07);
-      flex-wrap: wrap;
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 20px;
-      font-weight: 800;
-      color: var(--text);
-      letter-spacing: -0.02em;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      color: var(--text-subtle);
-      font-weight: 500;
-      margin-top: 2px;
-      letter-spacing: 0.04em;
-    }
-
-    /* ─── FOOTER ─── */
+    /* ── FOOTER ── */
     footer {
+      margin-top: 64px;
+      padding-top: 24px;
       border-top: 1px solid var(--border);
-      padding: 28px 0;
-      margin-bottom: 0;
-    }
-
-    footer .footer-inner {
-      max-width: 760px;
-      margin: 0 auto;
-      padding: 0 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
     }
 
-    footer p {
-      font-size: 13px;
-      color: var(--text-subtle);
-    }
-
-    footer a {
-      color: var(--text-muted);
+    footer p, footer a {
+      font-size: 12px;
+      color: var(--text-3);
       text-decoration: none;
-      transition: color 0.2s;
     }
 
-    footer a:hover {
-      color: var(--text);
-    }
-
-    .footer-dot {
-      color: var(--text-subtle);
-      margin: 0 6px;
-    }
-
-    /* Divider */
-    .divider {
-      height: 1px;
-      background: var(--border);
-      margin: 0;
-    }
-
-    /* ─── MOBILE ─── */
-    @media (max-width: 600px) {
-      .demo-card, .results-card {
-        padding: 24px 18px;
-      }
-
-      .cta-card {
-        padding: 36px 24px;
-      }
-
-      .hero {
-        padding: 56px 0 48px;
-      }
-    }
+    footer a:hover { color: var(--text-2); }
   </style>
 </head>
 <body>
+<div class="page">
 
-  <!-- NAV -->
-  <nav>
-    <div class="nav-inner">
-      <a href="#" class="nav-brand">
-        <span class="shield">🛡️</span>
-        <span>Fake Review Detector</span>
-      </a>
-      <div class="nav-pill">
-        <span class="dot"></span>
-        Live Demo
-      </div>
-    </div>
-  </nav>
+  <!-- HEADER -->
+  <header>
+    <a href="#" class="logo">
+      <div class="logo-mark">🔍</div>
+      ReviewCheck
+    </a>
+    <a href="https://rapidapi.com/flusnot/api/fake-review-detector" target="_blank" class="header-link">
+      Get API access →
+    </a>
+  </header>
 
   <!-- HERO -->
-  <div class="wrapper">
-    <section class="hero">
-      <div class="hero-icon">🔍</div>
-      <h1>Detect Fake Reviews <span>Instantly</span></h1>
-      <p>Paste any product review below and our AI will analyze it for authenticity in seconds — no signup required.</p>
-      <div class="hero-badges">
-        <span class="badge">⚡ Powered by Groq AI</span>
-        <span class="badge">🔒 No data stored</span>
-        <span class="badge">🌐 REST API available</span>
-      </div>
-    </section>
+  <section class="hero">
+    <div class="hero-tag">
+      <span class="hero-tag-dot"></span>
+      Free to try — no signup
+    </div>
+    <h1>Is that review <em>real?</em></h1>
+    <p class="hero-sub">Paste any product review below. Our AI scores its authenticity and flags the signals that give it away.</p>
+  </section>
 
-    <!-- DEMO FORM -->
-    <div class="demo-card">
-      <label class="form-label" for="review-text">Review Text <span>*</span></label>
+  <!-- FORM -->
+  <div class="form-section">
+    <div class="form-top">
+      <label class="field-label" for="review-text">Review text</label>
       <textarea
         id="review-text"
-        placeholder="Paste a product review here..."
-        spellcheck="false"
+        placeholder="Paste a review here..."
       >OMG this product is absolutely AMAZING!!! I cannot believe how incredible it is, literally changed my life completely. Best purchase I have ever made in my entire life, 100% recommend to everyone!!! The quality is outstanding and perfect in every single way. Do not hesitate, just buy it NOW you will not regret it!!!</textarea>
-
-      <div class="form-row">
-        <div class="input-group">
-          <label class="form-label" for="product-type" style="margin-top:0">Product Type <span style="color:var(--text-subtle); text-transform:none; letter-spacing:0; font-weight:400">(optional)</span></label>
-          <input
-            type="text"
-            id="product-type"
-            placeholder="e.g. blender, headphones, shoes"
-          />
-        </div>
-        <button class="btn-analyze" id="analyze-btn" onclick="analyzeReview()">
-          <div class="spinner" id="spinner"></div>
-          <span class="btn-text">Analyze Review</span>
-        </button>
-      </div>
-
-      <div class="cold-start-notice" id="cold-start-notice">
-        <span class="hourglass">⏳</span>
-        <span>API is waking up — this can take up to 30 seconds on first use. Hang tight!</span>
-      </div>
-
-      <div class="error-msg" id="error-msg">
-        <span>⚠️</span>
-        <span id="error-text">Something went wrong. Please try again in a moment.</span>
-      </div>
     </div>
+    <div class="form-divider"></div>
+    <div class="form-bottom">
+      <input type="text" id="product-type" placeholder="Product type (optional) — e.g. blender, shoes" />
+      <div class="form-bottom-divider"></div>
+      <button class="btn-analyze" id="analyze-btn" onclick="analyzeReview()">
+        <div class="spinner"></div>
+        <span class="btn-label">Analyze</span>
+      </button>
+    </div>
+  </div>
 
-    <!-- RESULTS -->
-    <div class="results-section" id="results-section">
-      <div class="results-card">
-        <div class="results-header">
-          <div class="results-title">Analysis Results</div>
-          <div class="verdict-badge" id="verdict-badge">
-            <span id="verdict-icon"></span>
-            <span id="verdict-text"></span>
-          </div>
+  <!-- STATUS MESSAGES -->
+  <div class="status-bar warning" id="cold-notice">
+    ⏳ API is waking up — first request can take up to 30 seconds. Almost there.
+  </div>
+  <div class="status-bar error" id="error-bar">
+    <span id="error-text">Something went wrong. Please try again.</span>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="results" id="results">
+
+    <div class="score-row">
+      <div class="score-left">
+        <div class="score-label">Fake Score</div>
+        <div class="score-number" id="score-number">—</div>
+        <div class="score-sub">out of 100</div>
+      </div>
+      <div class="score-bar-wrap">
+        <div class="score-bar-track">
+          <div class="score-bar-fill" id="score-bar"></div>
         </div>
-
-        <div class="gauge-container">
-          <div class="gauge-wrap">
-            <svg class="gauge-svg" viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-              <!-- Track (semicircle) -->
-              <path
-                class="gauge-track"
-                d="M 20 110 A 80 80 0 0 1 180 110"
-              />
-              <!-- Fill -->
-              <path
-                class="gauge-fill"
-                id="gauge-fill"
-                d="M 20 110 A 80 80 0 0 1 180 110"
-              />
-            </svg>
-            <div class="gauge-center-text">
-              <span class="gauge-score" id="gauge-score">—</span>
-              <span class="gauge-label">Fake Score</span>
-            </div>
-          </div>
-          <div class="gauge-scale">
-            <span style="color:var(--green)">Genuine</span>
-            <span style="color:var(--yellow)">Suspicious</span>
-            <span style="color:var(--red)">Fake</span>
-          </div>
-        </div>
-
-        <div class="reasons-section">
-          <div class="reasons-title">Signals Detected</div>
-          <ul class="reasons-list" id="reasons-list"></ul>
+        <div class="score-bar-labels">
+          <span>Genuine</span>
+          <span>Suspicious</span>
+          <span>Fake</span>
         </div>
       </div>
     </div>
 
-    <!-- CTA -->
-    <section class="cta-section">
-      <div class="cta-card">
-        <div class="cta-eyebrow">Ready to integrate?</div>
-        <h2>Want to use this in your app?</h2>
-        <p>Get full API access on RapidAPI. Simple REST calls, JSON responses, and flexible pricing starting free.</p>
-        <a href="https://rapidapi.com/flusnot/api/fake-review-detector" target="_blank" rel="noopener noreferrer" class="btn-cta">
-          Get API Access on RapidAPI <span class="arrow">→</span>
-        </a>
-        <div class="cta-stats">
-          <div class="stat">
-            <div class="stat-value">0–100</div>
-            <div class="stat-label">Confidence Score</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">&lt;2s</div>
-            <div class="stat-label">Avg Response Time</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">REST</div>
-            <div class="stat-label">JSON API</div>
-          </div>
-          <div class="stat">
-            <div class="stat-value">Free</div>
-            <div class="stat-label">To Start</div>
-          </div>
-        </div>
+    <div class="details-row">
+      <div class="verdict-card">
+        <div class="verdict-icon" id="verdict-icon">—</div>
+        <div class="verdict-label-small">Verdict</div>
+        <div class="verdict-text" id="verdict-text">—</div>
       </div>
-    </section>
+
+      <div class="reasons-card">
+        <div class="reasons-label">Signals detected</div>
+        <ul class="reasons-list" id="reasons-list"></ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta">
+    <div class="cta-text">
+      <h2>Integrate it into your app</h2>
+      <p>Simple REST API. JSON responses. Use it to flag reviews, protect your platform, or build trust with your users. Free plan available.</p>
+    </div>
+    <a href="https://rapidapi.com/flusnot/api/fake-review-detector" target="_blank" class="btn-cta">
+      View on RapidAPI →
+    </a>
   </div>
 
   <!-- FOOTER -->
   <footer>
-    <div class="footer-inner">
-      <p>Powered by Groq AI<span class="footer-dot">·</span>Built by <a href="https://rapidapi.com/flusnot/api/fake-review-detector" target="_blank">flusnot</a></p>
-      <p><a href="https://rapidapi.com/flusnot/api/fake-review-detector" target="_blank">RapidAPI →</a></p>
-    </div>
+    <p>Powered by Groq AI · Built by <a href="https://rapidapi.com/flusnot" target="_blank">flusnot</a></p>
+    <a href="https://rapidapi.com/flusnot/api/fake-review-detector" target="_blank">RapidAPI listing →</a>
   </footer>
 
-  <script>
-    // ── Gauge math ──────────────────────────────────────────────────────────
-    // SVG path: "M 20 110 A 80 80 0 0 1 180 110"
-    // This is a semicircle arc. The total arc length ≈ π * r = π * 80 ≈ 251.3
-    const GAUGE_ARC_LENGTH = Math.PI * 80; // ~251.3
+</div>
 
-    function setGauge(score) {
-      const fill = document.getElementById('gauge-fill');
-      // stroke-dasharray = total length, stroke-dashoffset = portion hidden
-      // offset = total - (score/100 * total)
-      const pct = Math.max(0, Math.min(100, score)) / 100;
-      const offset = GAUGE_ARC_LENGTH * (1 - pct);
+<script>
+  const VERDICT = {
+    genuine:     { icon: '✅', label: 'Genuine',     cls: 'genuine' },
+    suspicious:  { icon: '⚠️', label: 'Suspicious',  cls: 'suspicious' },
+    likely_fake: { icon: '🚨', label: 'Likely Fake', cls: 'likely_fake' },
+  };
 
-      fill.style.strokeDasharray = GAUGE_ARC_LENGTH;
-      fill.style.strokeDashoffset = GAUGE_ARC_LENGTH; // start at 0 (empty)
+  function scoreColor(s) {
+    if (s <= 40) return 'var(--green)';
+    if (s <= 70) return 'var(--yellow)';
+    return 'var(--red)';
+  }
 
-      // Animate on next frame
-      requestAnimationFrame(() => {
-        requestAnimationFrame(() => {
-          fill.style.strokeDashoffset = offset;
-        });
-      });
+  function animateNumber(el, target, color) {
+    el.style.color = color;
+    const dur = 900, start = performance.now();
+    (function tick(now) {
+      const t = Math.min((now - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - t, 3);
+      el.textContent = Math.round(eased * target);
+      if (t < 1) requestAnimationFrame(tick);
+    })(performance.now());
+  }
 
-      // Color
-      let color;
-      if (score <= 40) color = '#22c55e';
-      else if (score <= 70) color = '#eab308';
-      else color = '#ef4444';
+  function showResults(data) {
+    const { fake_score, verdict, reasons } = data;
+    const color = scoreColor(fake_score);
 
-      fill.style.stroke = color;
-      return color;
-    }
+    // Score
+    animateNumber(document.getElementById('score-number'), fake_score, color);
 
-    function animateScore(targetScore, color) {
-      const el = document.getElementById('gauge-score');
-      el.style.color = color;
-      let current = 0;
-      const duration = 1200;
-      const start = performance.now();
+    // Bar
+    const bar = document.getElementById('score-bar');
+    bar.style.backgroundColor = color;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      bar.style.width = fake_score + '%';
+    }));
 
-      function tick(now) {
-        const elapsed = now - start;
-        const progress = Math.min(elapsed / duration, 1);
-        // Ease out cubic
-        const eased = 1 - Math.pow(1 - progress, 3);
-        current = Math.round(eased * targetScore);
-        el.textContent = current;
-        if (progress < 1) requestAnimationFrame(tick);
-      }
+    // Verdict
+    const v = VERDICT[verdict] || VERDICT.suspicious;
+    document.getElementById('verdict-icon').textContent = v.icon;
+    const vt = document.getElementById('verdict-text');
+    vt.textContent = v.label;
+    vt.className = 'verdict-text ' + v.cls;
 
-      requestAnimationFrame(tick);
-    }
-
-    // ── Verdict display ─────────────────────────────────────────────────────
-    const VERDICT_CONFIG = {
-      genuine:     { icon: '✅', label: 'Genuine',     cls: 'genuine' },
-      suspicious:  { icon: '⚠️', label: 'Suspicious',  cls: 'suspicious' },
-      likely_fake: { icon: '🚨', label: 'Likely Fake', cls: 'likely_fake' },
-    };
-
-    function setVerdict(verdict) {
-      const cfg = VERDICT_CONFIG[verdict] || VERDICT_CONFIG['suspicious'];
-      const badge = document.getElementById('verdict-badge');
-      badge.className = 'verdict-badge ' + cfg.cls;
-      document.getElementById('verdict-icon').textContent = cfg.icon;
-      document.getElementById('verdict-text').textContent = cfg.label;
-    }
-
-    // ── Reasons ─────────────────────────────────────────────────────────────
-    function setReasons(reasons) {
-      const list = document.getElementById('reasons-list');
-      list.innerHTML = '';
-
-      if (!reasons || reasons.length === 0) {
-        const li = document.createElement('li');
-        li.className = 'reason-pill';
-        li.textContent = 'No specific signals detected';
-        list.appendChild(li);
-        return;
-      }
-
-      reasons.forEach((reason, i) => {
-        const li = document.createElement('li');
-        li.className = 'reason-pill';
-        li.style.animationDelay = (i * 0.08) + 's';
-        li.textContent = reason;
-        list.appendChild(li);
-      });
-    }
-
-    // ── Loading state ────────────────────────────────────────────────────────
-    let coldStartTimer = null;
-
-    function setLoading(isLoading) {
-      const btn = document.getElementById('analyze-btn');
-      const spinner = document.getElementById('spinner');
-      const notice = document.getElementById('cold-start-notice');
-
-      if (isLoading) {
-        btn.classList.add('loading');
-        btn.disabled = true;
-
-        coldStartTimer = setTimeout(() => {
-          notice.classList.add('visible');
-        }, 5000);
-      } else {
-        btn.classList.remove('loading');
-        btn.disabled = false;
-        clearTimeout(coldStartTimer);
-        notice.classList.remove('visible');
-      }
-    }
-
-    function showError(msg) {
-      const el = document.getElementById('error-msg');
-      document.getElementById('error-text').textContent = msg;
-      el.classList.add('visible');
-    }
-
-    function clearError() {
-      document.getElementById('error-msg').classList.remove('visible');
-    }
-
-    // ── Main ─────────────────────────────────────────────────────────────────
-    async function analyzeReview() {
-      const reviewText = document.getElementById('review-text').value.trim();
-      const productType = document.getElementById('product-type').value.trim();
-
-      if (!reviewText) {
-        document.getElementById('review-text').focus();
-        return;
-      }
-
-      clearError();
-      setLoading(true);
-
-      // Hide results while analyzing
-      const resultsSection = document.getElementById('results-section');
-      resultsSection.classList.remove('visible');
-
-      try {
-        const body = { review_text: reviewText };
-        if (productType) body.product_type = productType;
-
-        const response = await fetch('https://fake-review-detector-9747.onrender.com/demo/detect', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
-        });
-
-        if (!response.ok) {
-          let errMsg = 'Something went wrong. Please try again.';
-          try {
-            const errData = await response.json();
-            if (errData.detail || errData.message || errData.error) {
-              errMsg = errData.detail || errData.message || errData.error;
-            }
-          } catch (_) {}
-          throw new Error(errMsg);
-        }
-
-        const data = await response.json();
-        const { fake_score, verdict, reasons } = data;
-
-        // Show results
-        resultsSection.classList.add('visible');
-        resultsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-        // Animate gauge
-        const color = setGauge(fake_score);
-        animateScore(fake_score, color);
-
-        // Set verdict
-        setVerdict(verdict);
-
-        // Set reasons
-        setReasons(reasons);
-
-      } catch (err) {
-        showError(err.message || 'Unable to reach the API. Please try again in a moment.');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    // Allow Enter key in textarea with Ctrl/Cmd
-    document.getElementById('review-text').addEventListener('keydown', function(e) {
-      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
-        analyzeReview();
-      }
+    // Reasons
+    const list = document.getElementById('reasons-list');
+    list.innerHTML = '';
+    const items = (reasons && reasons.length) ? reasons : ['No specific signals detected'];
+    items.forEach((r, i) => {
+      const li = document.createElement('li');
+      li.className = 'reason-item';
+      li.style.animationDelay = (i * 0.07) + 's';
+      li.innerHTML = `<span class="reason-dot"></span><span>${r}</span>`;
+      list.appendChild(li);
     });
-  </script>
+
+    document.getElementById('results').classList.add('visible');
+  }
+
+  let coldTimer = null;
+
+  function setLoading(on) {
+    const btn = document.getElementById('analyze-btn');
+    const cold = document.getElementById('cold-notice');
+    if (on) {
+      btn.classList.add('loading');
+      btn.disabled = true;
+      coldTimer = setTimeout(() => cold.classList.add('visible'), 5000);
+    } else {
+      btn.classList.remove('loading');
+      btn.disabled = false;
+      clearTimeout(coldTimer);
+      cold.classList.remove('visible');
+    }
+  }
+
+  function setError(msg) {
+    const bar = document.getElementById('error-bar');
+    document.getElementById('error-text').textContent = msg;
+    bar.classList.add('visible');
+  }
+
+  function clearError() {
+    document.getElementById('error-bar').classList.remove('visible');
+  }
+
+  async function analyzeReview() {
+    const text = document.getElementById('review-text').value.trim();
+    const type = document.getElementById('product-type').value.trim();
+    if (!text) { document.getElementById('review-text').focus(); return; }
+
+    clearError();
+    setLoading(true);
+    document.getElementById('results').classList.remove('visible');
+
+    try {
+      const body = { review_text: text };
+      if (type) body.product_type = type;
+
+      const res = await fetch('https://fake-review-detector-9747.onrender.com/demo/detect', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (!res.ok) {
+        let msg = 'Something went wrong. Please try again.';
+        try { const d = await res.json(); if (d.error) msg = d.error; } catch (_) {}
+        throw new Error(msg);
+      }
+
+      showResults(await res.json());
+    } catch (e) {
+      setError(e.message || 'Unable to reach the API. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  document.getElementById('review-text').addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') analyzeReview();
+  });
+</script>
 </body>
 </html>
